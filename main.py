@@ -18,7 +18,7 @@ states = []
 controls = []
 
 SET_NUM_DATAPOINTS = 1000
-
+previousPosi = []
 def monitor():
     with xpc.XPlaneConnect() as client:
         posi = client.getPOSI()
@@ -54,12 +54,12 @@ def writeCSV():
     controls_temp = controls
     with open('Nominal-Simulation-Training.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quotechar="|", quoting=csv.QUOTE_MINIMAL)
-        for i in range(0, len(states)):
+        for i in range(1, len(states)):
             controls_temp[i].extend(states_temp[i])
             data = controls_temp[i]
             writer.writerow(data)
 def readCSV():
-    with open('Nominal-Simulation-Training-2.csv', 'r', newline='') as csvfile:
+    with open('/Users/tdogb/Robotics/Core Lab/Plane Project/XPlane-Sim/Nominal-Simulation-Training-2.csv', 'r', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='|')
         for row in reader:
             controls.append(row[0:11])
@@ -69,7 +69,9 @@ def readCSV():
                 controls[i][b] = float(controls[i][b])
         for i in range(0,len(states)):
             for b in range(0,len(states[0])):
-                states[i][b] = float(states[i][b])
+                states[i][b] = float(states[i][b]) - float(controls[i][b+4])
+        controls.pop(0)
+        states.pop(0)
 
 class Net(nn.Module):
     def __init__(self):
@@ -92,15 +94,19 @@ criterion = nn.MSELoss()
 def nn():
     print(states[0])
     print("controls: ", controls[0])
-    losses = train()
-    fig, axs = plt.subplots(2)
+    losses, x_test, y_test = train()
+    fig, axs = plt.subplots(4)
     axs[0].plot(range(0, len(losses)), losses)
+    new = losses[100:len(losses)-1]
+    axs[1].plot(range(0, len(new)), new)
+    losses_test = test(x_test, y_test)
+    axs[2].plot(range(0, len(losses_test)), losses_test)
     plt.show()
 
 def train():
     net.train()
     losses = []
-    x_train_t, x_test_t, y_train_t, y_test_t = train_test_split(controls, states, train_size=0.33)
+    x_train_t, x_test_t, y_train_t, y_test_t = train_test_split(controls, states, train_size=0.8)
     dataset = TensorDataset(torch.Tensor(x_train_t), torch.Tensor(y_train_t))
     dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
     for epoch in range(1,200):
@@ -113,8 +119,25 @@ def train():
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            print(loss)
-    return losses
+        if epoch % 10:
+            print(loss.item())
+    torch.save(net.state_dict(), "nn_output")
+    return losses, x_test_t, y_test_t
+
+def test(x_test, y_test):
+    print("----------TESTING-----------")
+    losses_test = []
+    dataset = TensorDataset(torch.Tensor(x_test), torch.Tensor(y_test))
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+    for idx, (x,y) in enumerate(dataloader):
+        x_test_i = Variable(x).float()
+        y_test_i = Variable(y).float()
+        y_pred = net(x_test_i)
+        loss = criterion(y_test_i, y_pred)
+        losses_test.append(loss.item())
+        # print("i:", idx, " real: ", y_test_i, " pred: ", y_pred)
+        print(loss.item())
+    return losses_test
 
 if __name__ == "__main__":
     # monitor()
