@@ -156,10 +156,10 @@ class XPlaneConnect(object):
 
         # Read response
         resultBuf = self.readUDP()
-        if len(resultBuf) != 42:
+        if len(resultBuf) != 54:
             raise ValueError("Unexpected response length.")
 
-        result = struct.unpack("<4sxBfffffffff", resultBuf)
+        result = struct.unpack("<4sxBffffffffffff", resultBuf)
         if result[0] != b'POSI':
             raise ValueError("Unexpected header: " + result[0])
 

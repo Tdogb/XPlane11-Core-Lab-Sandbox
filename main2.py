@@ -14,11 +14,18 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import csv
 
-states = []
+SET_NUM_DATAPOINTS = 100
+
+dS = []
 controls = []
 
-SET_NUM_DATAPOINTS = 1000
-previousPosi = []
+posi_raw = []
+controls_raw = []
+
+'''
+lat, lon, elev, pitch, roll, yaw, angp, angr, angy, localvx, localvy, localvz
+ele, ail, rud, throttle
+'''
 def monitor():
     with xpc.XPlaneConnect() as client:
         posi = client.getPOSI()
@@ -27,55 +34,39 @@ def monitor():
         client.sendPOSI(posi_temp[0:len(posi_temp)-6])
         client.sendPOSI(posi_temp[0:len(posi_temp)-6], 1)
         time.sleep(0.02)
-        posi_trash = [0,0,0,0,0,0,0,0,0,0]
-        while len(states) < SET_NUM_DATAPOINTS:
-            posi = client.getPOSI();
-            ctrl = client.getCTRL();
-            if(posi != []):
-                posi_temp = list(posi)[2:12]
-                cntrl_temp = list(ctrl)[0:4]
-                if len(states) != 0:
-                    cntrl_temp.extend(states[-1])
-                    controls.append(cntrl_temp)
-                else:
-                    cntrl_temp.append(range(1,len(posi_temp)))
-                    controls.append(cntrl_temp)
-                states.append(posi_temp)
-            #Height, airspeed, roll, pitch, yaw, aroll, apitch, ayaw
-            #Throttle, roll, pitch, yaw
-            # print "Loc: (%4f, %4f, %4f) Aileron:%2f Elevator:%2f Rudder:%2f\n"\
-            #    % (posi[0], posi[1], posi[2], ctrl[1], ctrl[0], ctrl[2])
+        while len(posi_raw) < SET_NUM_DATAPOINTS:
+            if posi != []:
+                posi_raw.append(list(client.getPOSI()))
+                controls_raw.append(list(client.getCTRL()))
             time.sleep(0.02)
-        states.pop(0)
-        controls.pop(0)
+            
+def processData():
+    for i in range(1,len(posi_raw)):
+        # print(posi_raw[i][len(posi_raw[0])-1])
+        posi_prev_temp = posi_raw[i-1][2:12]
+        posi_temp = posi_raw[i][2:12]
+        control_temp = controls_raw[i][0:4]
+        dS_line = []
+        for b in range(0, len(posi_temp)):
+            control_temp[b] = float(control_temp[b])
+            dS_line.append(float(posi_temp[b]) - float(posi_prev_temp[b]))
+        dS.append(dS_line)
+        control_temp.extend(posi_temp)
+        controls.append(control_temp)
 
-def writeCSV():
-    states_temp = states
-    controls_temp = controls
+def writecsv():
     with open('Nominal-Simulation-Training.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quotechar="|", quoting=csv.QUOTE_MINIMAL)
-        for i in range(1, len(states)):
-            controls_temp[i].extend(states_temp[i])
-            data = controls_temp[i]
-            writer.writerow(data)
-def readCSV():
-    with open('/Users/tdogb/Robotics/Core Lab/Plane Project/XPlane-Sim/Nominal-Simulation-Training-vels-2.csv', 'r', newline='') as csvfile:
+        for i in range(0, len(dS)):
+            temp = controls[i]
+            temp.extend(dS[i])
+            writer.writerow(temp)
+def readcsv():
+    with open('/Users/tdogb/Robotics/Core Lab/Plane Project/XPlane-Sim/Nominal-Simulation-Training-new1.csv', 'r', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='|')
         for row in reader:
-            controls.append(row[0:14])
-            states.append(row[14:24])
-        for i in range(0,len(controls)):
-            for b in range(0,len(controls[0])):
-                controls[i][b] = float(controls[i][b])
-        for i in range(0,len(states)):
-            for b in range(0,len(states[0])):
-                temp = states[i][b]
-                states[i][b] = float(controls[i][b+4] - float(states[i][b]))
-                print(states[i][b], "  ", temp, "   ", controls[i][b+4])
-            # states[i][7:10] = 
-            print(i)
-        controls.pop(0)
-        states.pop(0)
+            controls.append(list(map(float,row[0:14])))
+            dS.append(list(map(float,row[14:24])))
 
 class Net(nn.Module):
     def __init__(self):
@@ -99,18 +90,22 @@ def nn():
     # print(states[59])
     # print("controls: ", controls[59])
     losses, x_test, y_test = train()
-    fig, axs = plt.subplots(4)
+    fig, axs = plt.subplots(3)
     axs[0].plot(range(0, len(losses)), losses)
+    # axs[0].set_title("Training loss")
     new = losses[100:len(losses)-1]
     axs[1].plot(range(0, len(new)), new)
+    # axs[1].set_title("zoomed in training loss")
     losses_test = test(x_test, y_test)
     axs[2].plot(range(0, len(losses_test)), losses_test)
+    # axs[2].set_title("Testing Loss")
     plt.show()
 
 def train():
     net.train()
     losses = []
-    x_train_t, x_test_t, y_train_t, y_test_t = train_test_split(controls, states, train_size=0.8)
+    x_train_t, x_test_t, y_train_t, y_test_t = train_test_split(controls, dS, train_size=0.8)
+    print(x_train_t[0])
     dataset = TensorDataset(torch.Tensor(x_train_t), torch.Tensor(y_train_t))
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
     for epoch in range(1,800):
@@ -118,8 +113,6 @@ def train():
             x_train = Variable(x).float()
             y_train = Variable(y).float()
             y_pred = net(x_train)
-            # print(y_train)
-            # print(y_pred)
             loss = criterion(y_pred, y_train)
             losses.append(loss.item())
             optimizer.zero_grad()
@@ -147,6 +140,7 @@ def test(x_test, y_test):
 
 if __name__ == "__main__":
     # monitor()
-    # writeCSV()
-    readCSV()
+    # processData()
+    # writecsv()
+    readcsv()
     nn()
