@@ -83,7 +83,7 @@ class Net(nn.Module):
         return C
 
 net = Net()
-optimizer = optim.Adam(net.parameters(), lr=0.0005)
+optimizer = optim.Adam(net.parameters(), lr=0.001)
 criterion = nn.MSELoss()
 
 def nn():
@@ -106,16 +106,16 @@ def train():
     losses = []
     x_train_t, x_test_t, y_train_t, y_test_t = train_test_split(controls, dS, train_size=0.8)
     print(x_train_t[0])
-    dataset = TensorDataset(torch.Tensor(x_train_t), torch.Tensor(y_train_t))
+    dataset = TensorDataset(torch.FloatTensor(x_train_t), torch.FloatTensor(y_train_t))
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
-    for epoch in range(1,800):
+    for epoch in range(1,2000):
         for idx, (x,y) in enumerate(dataloader):
             x_train = Variable(x).float()
             y_train = Variable(y).float()
+            optimizer.zero_grad()
             y_pred = net(x_train)
             loss = criterion(y_pred, y_train)
             losses.append(loss.item())
-            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
         if epoch % 10:
