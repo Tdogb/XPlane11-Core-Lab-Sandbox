@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import csv
 
-SET_NUM_DATAPOINTS = 100
+SET_NUM_DATAPOINTS = 10000
 
 dS = []
 controls = []
@@ -73,13 +73,13 @@ class Net(nn.Module):
         super(Net,self).__init__()
         self.relu0 = nn.ReLU()
         self.l0 = nn.Linear(14,32)
-        # self.l1 = nn.Linear(100,30)
+        self.l1 = nn.Linear(32,32)
         self.l2 = nn.Linear(32,10)
 
     def forward(self, x):
         A = self.relu0(self.l0(x))
-        # B = self.relu0(self.l1(A))
-        C = self.l2(A)
+        B = self.relu0(self.l1(A))
+        C = self.l2(B)
         return C
 
 net = Net()
@@ -93,7 +93,7 @@ def nn():
     fig, axs = plt.subplots(3)
     axs[0].plot(range(0, len(losses)), losses)
     # axs[0].set_title("Training loss")
-    new = losses[100:len(losses)-1]
+    new = losses[500:len(losses)-1]
     axs[1].plot(range(0, len(new)), new)
     # axs[1].set_title("zoomed in training loss")
     losses_test = test(x_test, y_test)
@@ -107,7 +107,7 @@ def train():
     x_train_t, x_test_t, y_train_t, y_test_t = train_test_split(controls, dS, train_size=0.8)
     print(x_train_t[0])
     dataset = TensorDataset(torch.FloatTensor(x_train_t), torch.FloatTensor(y_train_t))
-    dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
     for epoch in range(1,2000):
         for idx, (x,y) in enumerate(dataloader):
             x_train = Variable(x).float()
@@ -126,9 +126,9 @@ def train():
 def test(x_test, y_test):
     print("----------TESTING-----------")
     losses_test = []
-    dataset = TensorDataset(torch.Tensor(x_test), torch.Tensor(y_test))
+    dataset = TensorDataset(torch.FloatTensor(x_test), torch.FloatTensor(y_test))
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
-    for idx, (x,y) in enumerate(dataloader):
+    for idx, (x,y) in enumerate(dataset):
         x_test_i = Variable(x).float()
         y_test_i = Variable(y).float()
         y_pred = net(x_test_i)
@@ -139,8 +139,8 @@ def test(x_test, y_test):
     return losses_test
 
 if __name__ == "__main__":
-    # monitor()
-    # processData()
-    # writecsv()
-    readcsv()
-    nn()
+    monitor()
+    processData()
+    writecsv()
+    # readcsv()
+    # nn()
