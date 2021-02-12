@@ -1,5 +1,26 @@
-#!/usr/bin/env python
 import socket, time, json
+
+'''
+state_from_socket = {
+    "timestep": timestep,
+    "elev": posi_raw[offset],
+    "pitch": posi_raw[offset+1],
+    "roll": posi_raw[offset+2],
+    "yaw": posi_raw[offset+3],
+    "angPitch": posi_raw[offset+4],
+    "angRoll": posi_raw[offset+5],
+    "angYaw": posi_raw[offset+6],
+    "localVx": posi_raw[offset+7],
+    "localVy": posi_raw[offset+8],
+    "localVz": posi_raw[offset+9]
+}
+'''
+def send_control(state_from_socket):
+    # elevator, aileron, rudder, throttle
+    return [0,0,0,0]
+
+
+
 global s
 def Tcp_connect( HostIp, Port ):
     global s
@@ -11,16 +32,6 @@ def Tcp_connect( HostIp, Port ):
 def Tcp_Write(D):
    s.send(str.encode(D + '\r'))
    return
-   
-# def Tcp_Read():
-#     a = ' '
-#     b = b''
-#     while a != b'\r':
-#         a = s.recv(1)
-#         if a != b'\r':
-#             b = b + a
-#     return b
-
 
 def Tcp_Read(): 
     a = ' '
@@ -34,19 +45,8 @@ def Tcp_Read():
 def Tcp_Close( ):
    s.close()
    return 
-   
-# Tcp_connect( '127.0.0.1', 17098)
-# # Tcp_Write(b'hi')
-# print(Tcp_Read())
-# # Tcp_Write(b'hi')
-# print(Tcp_Read())
-# Tcp_Close()
 
 timestep = 0
-
-def calculate():
-    time.sleep(1)
-    return 1
 
 def main():
     global timestep
@@ -59,13 +59,13 @@ def main():
         if from_xplane["timestep"] >= timestep:
             timestep = from_xplane["timestep"] + 1
             print(timestep)
-            # calculate()
+            cntrl = send_control(from_xplane)
             names_from_mpc = {
                 "timestep": timestep,
-                "ele": 0,
-                "ail": 0.,
-                "rud": 0.,
-                "throttle": 0.
+                "ele": cntrl[0],
+                "ail": cntrl[1],
+                "rud": cntrl[2],
+                "throttle": cntrl[3]
             }
             Tcp_Write(json.dumps(names_from_mpc))
             print("sent")

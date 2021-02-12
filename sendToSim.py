@@ -142,13 +142,13 @@ def sendToMPC():
         Tcp_Write(json.dumps(names_from_xplane))
         # print("attempting to load. Timestep = ", names_from_mpc["timestep"], "curr ", timestep)
         # while names_from_mpc["timestep"] == timestep:
-        print("in")
+        # print("in")
         read = Tcp_Read()
-        print(read)
+        # print(read)
         if read != b'':
             print(read.decode('utf-8'))
             names_from_mpc = json.loads(read.decode('utf-8'))
-            print("names", names_from_mpc["timestep"])
+            # print("names", names_from_mpc["timestep"])
             timestep = timestep + 1
 
 if __name__ == "__main__":
