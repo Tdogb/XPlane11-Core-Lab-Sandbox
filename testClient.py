@@ -13,13 +13,10 @@ state_from_socket = {
     "localVx": posi_raw[offset+7],
     "localVy": posi_raw[offset+8],
     "localVz": posi_raw[offset+9]
-}
 '''
 def send_control(state_from_socket):
     # elevator, aileron, rudder, throttle
     return [0,0,0,0]
-
-
 
 global s
 def Tcp_connect( HostIp, Port ):
