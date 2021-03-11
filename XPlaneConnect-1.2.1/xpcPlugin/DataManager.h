@@ -98,6 +98,9 @@ namespace XPC
 		DREF_LocalVX,
 		DREF_LocalVY,
 		DREF_LocalVZ,
+        DREF_vx_acf_axis,
+        DREF_vy_acf_axis,
+        DREF_vz_acf_axis,
 
 		DREF_ThrottleSet = 2200,
 		DREF_ThrottleActual = 2300,

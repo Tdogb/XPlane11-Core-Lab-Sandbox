@@ -522,25 +522,28 @@ namespace XPC
 		unsigned char aircraft = buffer[5];
 		Log::FormatLine(LOG_TRACE, "GPOS", "Getting position information for aircraft %u", aircraft);
 
-		unsigned char response[42] = "POSI";
-		response[5] = (char)DataManager::GetInt(DREF_GearHandle, aircraft);
-		*((float*)(response + 6)) = (float)DataManager::GetDouble(DREF_Latitude, aircraft);
-		*((float*)(response + 10)) = (float)DataManager::GetDouble(DREF_Longitude, aircraft);
-		*((float*)(response + 14)) = (float)DataManager::GetDouble(DREF_Elevation, aircraft);
-		*((float*)(response + 18)) = DataManager::GetFloat(DREF_Pitch, aircraft);
-		*((float*)(response + 22)) = DataManager::GetFloat(DREF_Roll, aircraft);
-		*((float*)(response + 26)) = DataManager::GetFloat(DREF_HeadingTrue, aircraft);
+		unsigned char response[54] = "POSI";
+		response[5] = (char)DataManager::GetInt(DREF_GearHandle, aircraft); //ignored
+		*((float*)(response + 6)) = (float)DataManager::GetDouble(DREF_Latitude, aircraft); //0
+		*((float*)(response + 10)) = (float)DataManager::GetDouble(DREF_Longitude, aircraft); //1
+		*((float*)(response + 14)) = (float)DataManager::GetDouble(DREF_Elevation, aircraft); //2
+		*((float*)(response + 18)) = DataManager::GetFloat(DREF_Roll, aircraft); //3
+		*((float*)(response + 22)) = DataManager::GetFloat(DREF_Pitch, aircraft); //4
+		*((float*)(response + 26)) = DataManager::GetFloat(DREF_HeadingTrue, aircraft); //5
         
-        *((float*)(response + 30)) = DataManager::GetFloat(DREF_P, aircraft);
-        *((float*)(response + 34)) = DataManager::GetFloat(DREF_Q, aircraft);
-        *((float*)(response + 38)) = DataManager::GetFloat(DREF_R, aircraft);
-
+        *((float*)(response + 30)) = DataManager::GetFloat(DREF_P, aircraft); //6
+        *((float*)(response + 34)) = DataManager::GetFloat(DREF_Q, aircraft); //7
+        *((float*)(response + 38)) = DataManager::GetFloat(DREF_R, aircraft); //8
+        
+        *((float*)(response + 42)) = DataManager::GetFloat(DREF_vx_acf_axis, aircraft); //9
+        *((float*)(response + 46)) = DataManager::GetFloat(DREF_vy_acf_axis, aircraft); //10
+        *((float*)(response + 50)) = DataManager::GetFloat(DREF_LocalVZ, aircraft); //11
 		
 //		float gear[10];
 //		DataManager::GetFloatArray(DREF_GearDeploy, gear, 10, aircraft);
 //		*((float*)(response + 30)) = gear[0];
 
-		sock->SendTo(response, 42, &connection.addr);
+		sock->SendTo(response, 54, &connection.addr);
 	}
 
 	void MessageHandlers::HandlePosi(const Message& msg)

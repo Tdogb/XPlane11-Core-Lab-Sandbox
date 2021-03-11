@@ -110,13 +110,17 @@ namespace XPC
 		drefs.insert(make_pair(DREF_Longitude, XPLMFindDataRef("sim/flightmodel/position/longitude")));
 		drefs.insert(make_pair(DREF_AGL, XPLMFindDataRef("sim/flightmodel/position/y_agl")));
         drefs.insert(make_pair(DREF_Elevation, XPLMFindDataRef("sim/flightmodel/position/elevation")));
-
+        drefs.insert(make_pair(DREF_vx_acf_axis, XPLMFindDataRef("sim/flightmodel/forces/vx_acf_axis")));
+        drefs.insert(make_pair(DREF_vy_acf_axis, XPLMFindDataRef("sim/flightmodel/forces/vy_acf_axis")));
+        drefs.insert(make_pair(DREF_vz_acf_axis, XPLMFindDataRef("sim/flightmodel/forces/vz_acf_axis")));
+        
 		drefs.insert(make_pair(DREF_LocalX, XPLMFindDataRef("sim/flightmodel/position/local_x")));
 		drefs.insert(make_pair(DREF_LocalY, XPLMFindDataRef("sim/flightmodel/position/local_y")));
 		drefs.insert(make_pair(DREF_LocalZ, XPLMFindDataRef("sim/flightmodel/position/local_z")));
 		drefs.insert(make_pair(DREF_LocalVX, XPLMFindDataRef("sim/flightmodel/position/local_vx")));
 		drefs.insert(make_pair(DREF_LocalVY, XPLMFindDataRef("sim/flightmodel/position/local_vy")));
 		drefs.insert(make_pair(DREF_LocalVZ, XPLMFindDataRef("sim/flightmodel/position/local_vz")));
+
 
 		drefs.insert(make_pair(DREF_ThrottleSet, XPLMFindDataRef("sim/flightmodel/engine/ENGN_thro")));
 		drefs.insert(make_pair(DREF_ThrottleActual, XPLMFindDataRef("sim/flightmodel2/engines/throttle_used_ratio")));
@@ -144,6 +148,9 @@ namespace XPC
 		drefs.insert(make_pair(DREF_MP5Alt, XPLMFindDataRef("sim/multiplayer/position/plane5_el")));
 		drefs.insert(make_pair(DREF_MP6Alt, XPLMFindDataRef("sim/multiplayer/position/plane6_el")));
 		drefs.insert(make_pair(DREF_MP7Alt, XPLMFindDataRef("sim/multiplayer/position/plane7_el")));
+    
+
+
 
 		char multi[256];
 		for (int i = 1; i < PLANE_COUNT; i++)
@@ -264,6 +271,9 @@ namespace XPC
 		XPData[20][1] = DREF_Longitude;
 		XPData[20][2] = DREF_Elevation;
 		XPData[20][3] = DREF_AGL;
+        XPData[20][4] = DREF_vx_acf_axis;
+        XPData[20][5] = DREF_vy_acf_axis;
+        XPData[20][6] = DREF_vz_acf_axis;
 		// Row 21: Local Position, Velocity
 		XPData[21][0] = DREF_LocalX;
 		XPData[21][1] = DREF_LocalY;
@@ -271,6 +281,7 @@ namespace XPC
 		XPData[21][3] = DREF_LocalVX;
 		XPData[21][4] = DREF_LocalVY;
 		XPData[21][5] = DREF_LocalVZ;
+        
 		// Row 22: All Planes: Lat
 		XPData[22][0] = DREF_Latitude;
 		XPData[22][1] = DREF_MP1Lat;

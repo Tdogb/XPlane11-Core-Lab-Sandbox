@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import csv
 
-SET_NUM_DATAPOINTS = 10000
+SET_NUM_DATAPOINTS = 1000
 
 dS = []
 controls = []
@@ -47,20 +47,37 @@ def processData():
         posi_temp = posi_raw[i][2:12]
         control_temp = controls_raw[i][0:4]
         dS_line = []
-        for b in range(0, len(posi_temp)):
+        for b in range(0, len(control_temp)):
             control_temp[b] = float(control_temp[b])
+        for b in range(0, len(posi_temp)):
             dS_line.append(float(posi_temp[b]) - float(posi_prev_temp[b]))
         dS.append(dS_line)
         control_temp.extend(posi_temp)
         controls.append(control_temp)
 
 def writecsv():
-    with open('Nominal-Simulation-Training.csv', 'w', newline='') as csvfile:
+    with open('Nominal-XPlane-0.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quotechar="|", quoting=csv.QUOTE_MINIMAL)
         for i in range(0, len(dS)):
             temp = controls[i]
+            posi_temp = posi_raw[i][2:12]
+            # print(posi_temp)
             temp.extend(dS[i])
+            # temp.append(dS[i])
             writer.writerow(temp)
+def plotf():
+    # print(posi_raw)
+    # print("-------------")
+    # print(posi_raw[])
+    posi_np = np.array(posi_raw)
+    fig, axs = plt.subplots(2,3)
+    axs[0,0].plot(posi_np[:,3])
+    axs[1,0].plot(posi_np[:,9])
+    axs[0,1].plot(posi_np[:,4])
+    axs[1,1].plot(posi_np[:,10])
+    axs[0,2].plot(posi_np[:,5])
+    axs[1,2].plot(posi_np[:,11])
+    plt.show()
 def readcsv():
     with open('/Users/tdogb/Robotics/Core Lab/Plane Project/XPlane-Sim/Nominal-Simulation-Training-new1.csv', 'r', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='|')
@@ -141,6 +158,7 @@ def test(x_test, y_test):
 if __name__ == "__main__":
     monitor()
     processData()
+    # plotf()
     writecsv()
     # readcsv()
     # nn()
